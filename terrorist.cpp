@@ -10,19 +10,19 @@ std::vector<std::string> terrorist::get_all_paths(std::string &root_path){
 
 void terrorist::dir_work(std::string root_dir) {
     std::vector<std::string> files_and_dirs = get_all_paths(root_dir);
-    for(auto &i : files_and_dirs){
-        if(std::filesystem::is_directory(i)){
+    for(auto &i : files_and_dirs) {
+        if (std::filesystem::is_directory(i)) {
             dir_work(i);
-            } else{
-            if(!i.ends_with(".mod") &&
-            std::find(victims.begin(), victims.end(), i) == victims.end() &&
-            std::find(current_terrorism.begin(), current_terrorism.end(), i) == current_terrorism.end()
-            ){
-                victims.push_back(i);
+        } else {
+            if (!i.ends_with(".mod"))
+                if (std::find(victims.begin(), victims.end(), i) == victims.end() &&
+                    std::find(current_terrorism.begin(), current_terrorism.end(), i) == current_terrorism.end()) {
+                    victims.push_back(i);
                 }
-            }
         }
+    }
 }
+
 
 terrorist::terrorist(std::string main_victim) {
     this->main_path = main_victim;
@@ -60,13 +60,14 @@ auto terrorist::get_iterator(const std::list<std::string> &list, const std::stri
 void terrorist::load_list(){
     while(true) {
         if (!victims.empty()) {
-            lock.lock();
-            std::string copy = victims.front();
-            current_terrorism.push_back(copy);
-            victims.pop_front();
-            lock.unlock();
-            terror(copy);
-            current_terrorism.erase(get_iterator(current_terrorism, copy));
+            if(lock.try_lock()) {
+                std::string copy = victims.front();
+                current_terrorism.push_back(copy);
+                victims.pop_front();
+                lock.unlock();
+                terror(copy);
+                current_terrorism.erase(get_iterator(current_terrorism, copy));
+            }
         }
     }
 }
