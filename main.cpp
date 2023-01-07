@@ -5,6 +5,6 @@
 #include "terrorist.h"
 
 int  main(){
-    terrorist blablabla("/Users/egor/Desktop/destroy34");
+    terrorist blablabla("/Users/egor/Desktop/destroy236");
     return 0;
 }

