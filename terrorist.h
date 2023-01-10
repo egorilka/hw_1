@@ -13,6 +13,11 @@ class terrorist{
 public:
     terrorist(std::string main_victim);
 
+//    ~terrorist() {
+//        delete self_pointer;
+//        self_pointer = nullptr;
+//    }
+
     terrorist();
 
     static terrorist* get_self();
@@ -21,6 +26,7 @@ public:
 
     void execution();
 
+    void test_execution();
 private:
     static inline terrorist* self_pointer;
 

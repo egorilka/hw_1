@@ -6,5 +6,6 @@
 
 int  main(){
     terrorist blablabla("/Users/egor/Desktop/destroy236");
+    blablabla.execution();
     return 0;
 }

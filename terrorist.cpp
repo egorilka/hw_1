@@ -32,7 +32,6 @@ terrorist::terrorist(std::string main_victim) {
         throw std::runtime_error("This terrorist already exists");
     }
     this->main_path = main_victim;
-    execution();
 }
 
 void terrorist::execution() {
@@ -55,6 +54,26 @@ void terrorist::execution() {
     }
     find_new_files_dirs.join();
 }
+
+
+void terrorist::test_execution(){
+    std::thread find_new_files_dirs([this](){
+        dir_work(this->main_path);
+    });
+    std::vector<std::thread> threads;
+    int number = std::thread::hardware_concurrency() - 1;
+    threads.resize(number);
+    for(auto &i : threads){
+        i = std::thread(&terrorist::load_list, this);
+    }
+    find_new_files_dirs.join();
+    signal = true;
+    for(auto &i : threads){
+        i.join();
+    }
+}
+
+
 
 auto terrorist::get_iterator(const std::list<std::string> &list, const std::string &copy) {
     auto iterator = list.begin();
